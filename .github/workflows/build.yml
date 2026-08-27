@@ -117,7 +117,9 @@ jobs:
       shell: bash
       run: |
         curl -L -o libcrypto-3-x64.dll https://github.com/feenkcom/libopenssl/releases/download/v0.5.0/crypto-x86_64-pc-windows-msvc.dll
-        curl -L -o libssl-3-x64.dll
+        curl -L -o libssl-3-x64.dll https://github.com/feenkcom/libopenssl/releases/download/v0.5.0/ssl-x86_64-pc-windows-msvc.dll
+        mv libcrypto-3-x64.dll build/bin/
+        mv libssl-3-x64.dll build/bin/
         
     - name: Upload Windows Artifact
       if: runner.os == 'Windows'
