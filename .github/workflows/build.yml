@@ -111,9 +111,17 @@ jobs:
         export ASEPRITE=$PWD/build/bin/aseprite
         cd tests
         $XVFB bash run-tests.sh
+
+    - name: Download OpenSSL DLL
+      if: runner.os == 'Windows'
+      shell: bash
+      run: |
+        curl -L -o libcrypto-3-x64.dll https://github.com/feenkcom/libopenssl/releases/download/v0.5.0/crypto-x86_64-pc-windows-msvc.dll
+        curl -L -o libssl-3-x64.dll
+        
     - name: Upload Windows Artifact
       if: runner.os == 'Windows'
       uses: actions/upload-artifact@v4
       with:
         name: aseprite-windows-${{ matrix.build_type }}-${{ matrix.ui }}-${{ matrix.scripting }}
-        path: build/bin/aseprite.exe
+        path: build/bin/
