@@ -111,7 +111,7 @@ jobs:
         export ASEPRITE=$PWD/build/bin/aseprite
         cd tests
         $XVFB bash run-tests.sh
-            - name: Download OpenSSL DLL
+    - name: Download OpenSSL DLL
       if: runner.os == 'Windows'
       shell: bash
       run: |
