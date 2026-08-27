@@ -49,6 +49,12 @@ jobs:
       if: ${{ runner.os == 'Linux' || runner.os == 'macOS' }}
       with:
         key: ${{ matrix.os }}-${{ matrix.ui }}-${{ matrix.scripting }}-${{ matrix.build_type }}
+
+    - name: Install OpenSSL via vcpkg
+      if: runner.os == 'Windows'
+      run: |
+        vcpkg install openssl:x64-windows
+        
     - uses: aseprite/get-ninja@main
     - uses: TheMrMilchmann/setup-msvc-dev@v4
       if: runner.os == 'Windows'
@@ -89,8 +95,15 @@ jobs:
           -DENABLE_CCACHE=$enable_ccache \
           -DLAF_BACKEND=$laf_backend \
           -DSKIA_DIR=$(realpath skia) \
-          -DSKIA_LIBRARY_DIR=$(realpath skia/out/Release-$skia_arch) \
-          -DENABLE_WEBSOCKET=OFF
+          -DSKIA_LIBRARY_DIR=$(realpath skia/out/Release-$skia_arch)
+
+    - name: Copy OpenSSL DLLs to build folder
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        Copy-Item "$env:VCPKG_INSTALLATION_ROOT/packages/openssl_x64-windows/bin/libcrypto-3-x64.dll" -Destination build/bin/
+        Copy-Item "$env:VCPKG_INSTALLATION_ROOT/packages/openssl_x64-windows/bin/libssl-3-x64.dll" -Destination build/bin/
+        
     - name: Compiling
       shell: bash
       run: |
@@ -118,4 +131,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: aseprite-windows-${{ matrix.build_type }}-${{ matrix.ui }}-${{ matrix.scripting }}
-        path: build/bin/aseprite.exe
+        path: |
+          build/bin/aseprite.exe
+          build/bin/libcrypto-3-x64.dll
+          build/bin/libssl-3-x64.dll
