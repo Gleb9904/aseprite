@@ -112,7 +112,7 @@ jobs:
         cd tests
         $XVFB bash run-tests.sh
 
-        - name: Copy OpenSSL DLLs from Git
+    - name: Copy OpenSSL DLLs from Git
       if: runner.os == 'Windows'
       shell: bash
       run: |
