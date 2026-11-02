@@ -112,6 +112,41 @@ jobs:
         cd tests
         $XVFB bash run-tests.sh
 
+    - name: Create AppImage Structure and Pack
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        SUFFIX="${{ matrix.build_type }}-${{ matrix.ui }}-${{ matrix.scripting }}"
+        APPDIR="Aseprite-$SUFFIX.AppDir"
+        mkdir -p $APPDIR/usr/bin
+        mkdir -p $APPDIR/usr/share/icons/hicolor/256x256/apps
+        
+        cp build/bin/aseprite $APPDIR/usr/bin/
+        
+        if [ -f "src/assets/icons/ase256.png" ]; then
+          cp src/assets/icons/ase256.png $APPDIR/usr/share/icons/hicolor/256x256/apps/aseprite.png
+          cp src/assets/icons/ase256.png $APPDIR/aseprite.png
+        else
+          touch $APPDIR/aseprite.png
+        fi
+        
+        cat <<EOF > $APPDIR/aseprite.desktop
+        [Desktop Entry]
+        Type=Application
+        Name=Aseprite
+        Exec=aseprite
+        Icon=aseprite
+        Categories=Graphics;
+        EOF
+        
+        curl -L -o $APPDIR/AppRun https://github.com
+        chmod +x $APPDIR/AppRun
+        
+        curl -L -o appimagetool https://github.com
+        chmod +x appimagetool
+        
+        ARCH=x86_64 ./appimagetool --no-appstream $APPDIR aseprite-$SUFFIX.AppImage
+
     - name: Copy OpenSSL DLLs from Git
       if: runner.os == 'Windows'
       shell: bash
@@ -130,3 +165,10 @@ jobs:
           build/bin/aseprite.exe
           build/bin/libcrypto-3-x64.dll
           build/bin/libssl-3-x64.dll
+
+    - name: Upload Linux Ubuntu Artifact
+      if: runner.os == 'Linux'
+      uses: actions/upload-artifact@v4
+      with:
+        name: aseprite-linux-${{ matrix.build_type }}-${{ matrix.ui }}-${{ matrix.scripting }}
+        path: "aseprite.AppImage"
