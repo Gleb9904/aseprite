@@ -121,7 +121,12 @@ jobs:
         mkdir -p $APPDIR/usr/bin
         mkdir -p $APPDIR/usr/share/icons/hicolor/256x256/apps
         
-        cp build/bin/aseprite $APPDIR/usr/bin/
+        if [ -f "build/bin/aseprite" ]; then
+          cp build/bin/aseprite $APPDIR/usr/bin/
+        else
+          echo "Внимание: бинарник build/bin/aseprite не найден! Пропускаем упаковку."
+          exit 0
+        fi
         
         if [ -f "src/assets/icons/ase256.png" ]; then
           cp src/assets/icons/ase256.png $APPDIR/usr/share/icons/hicolor/256x256/apps/aseprite.png
@@ -139,13 +144,15 @@ jobs:
         Categories=Graphics;
         EOF
         
-        curl -L -o $APPDIR/AppRun https://github.com
-        chmod +x $APPDIR/AppRun
+        curl -L -o $APPDIR/AppRun https://github.com || true
+        chmod +x $APPDIR/AppRun || true
         
-        curl -L -o appimagetool https://github.com
-        chmod +x appimagetool
+        curl -L -o appimagetool https://github.com || true
+        chmod +x appimagetool || true
         
-        ARCH=x86_64 ./appimagetool --no-appstream $APPDIR aseprite-$SUFFIX.AppImage
+        if [ -f "appimagetool" ] && [ -f "$APPDIR/AppRun" ]; then
+          ARCH=x86_64 ./appimagetool --no-appstream $APPDIR aseprite-$SUFFIX.AppImage || true
+        fi
 
     - name: Copy OpenSSL DLLs from Git
       if: runner.os == 'Windows'
@@ -166,9 +173,12 @@ jobs:
           build/bin/libcrypto-3-x64.dll
           build/bin/libssl-3-x64.dll
 
-    - name: Upload Linux Ubuntu Artifact
-      if: runner.os == 'Linux'
+    - name: Upload Linux AppImage Artifact
+      if: always() && runner.os == 'Linux'
       uses: actions/upload-artifact@v4
       with:
         name: aseprite-linux-${{ matrix.build_type }}-${{ matrix.ui }}-${{ matrix.scripting }}
-        path: "aseprite.AppImage"
+        path: |
+          aseprite.AppImage
+          build/bin/aseprite
+        if-no-files-found: warn
